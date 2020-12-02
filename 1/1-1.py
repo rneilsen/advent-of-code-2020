@@ -8,9 +8,9 @@ numbers.sort()
 (i, j) = (0, len(numbers) - 1)
 
 while True:
-    if numbers[i] + numbers[j] > 2020:
+    if numbers[i] + numbers[j] > TARGET:
         j -= 1
-    elif numbers[i] + numbers[j] < 2020:
+    elif numbers[i] + numbers[j] < TARGET:
         i += 1
     else:
         print(numbers[i], numbers[j], numbers[i] * numbers[j])
