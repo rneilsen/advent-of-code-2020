@@ -17,7 +17,7 @@ while cur_row < num_rows:
     if rows[cur_row][cur_col] == tree:
         num_trees += 1
     
-    cur_row += 1
+    cur_row += down_step
     # wrap around to left side again (simulates repeated blocks)
     cur_col = (cur_col + right_step) % num_cols
     
