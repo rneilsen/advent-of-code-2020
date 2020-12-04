@@ -1,5 +1,5 @@
 from os.path import abspath, join, dirname
-from re import match
+from re import fullmatch
 
 REQD_FIELDS = ['byr', 'iyr', 'eyr', 'hgt', 'hcl', 'ecl', 'pid']
 
@@ -45,13 +45,13 @@ for passport in passports:
             # continue
         
         # hgt (Height) - a number followed by either cm or in:
-        if match('[0-9]+cm', passport['hgt']):
+        if fullmatch('[0-9]+cm', passport['hgt']):
             # If cm, the number must be at least 150 and at most 193.
             if not 150 <= int(passport['hgt'][:-2]) <= 193:
                 valid = False
                 invalidations.append('hgt')
                 # continue
-        elif match('[0-9]+in', passport['hgt']):
+        elif fullmatch('[0-9]+in', passport['hgt']):
             # If in, the number must be at least 59 and at most 76.
             if not 59 <= int(passport['hgt'][:-2]) <= 76:
                 valid = False
@@ -64,7 +64,7 @@ for passport in passports:
             # continue
 
         # hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
-        if not match('#[0-9a-f]{6}', passport['hcl']):
+        if not fullmatch('#[0-9a-f]{6}', passport['hcl']):
             valid = False
             invalidations.append('hcl')
             # continue
@@ -76,12 +76,13 @@ for passport in passports:
             # continue
         
         # pid (Passport ID) - a nine-digit number, including leading zeroes.
-        if not match('[0-9]{9}', passport['pid']):
+        if not fullmatch('[0-9]{9}', passport['pid']):
             valid = False
             invalidations.append('pid')
             # continue
         
         # cid (Country ID) - ignored, missing or not.
+
     except:
         # invalid or missing fields
         valid = False
