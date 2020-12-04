@@ -1,10 +1,7 @@
 from os.path import abspath, join, dirname
 from re import fullmatch
 
-REQD_FIELDS = ['byr', 'iyr', 'eyr', 'hgt', 'hcl', 'ecl', 'pid']
-
-# with open(abspath(join(dirname(__file__), 'input'))) as f:
-with open('input') as f:
+with open(abspath(join(dirname(__file__), 'input'))) as f:
     raw_input = f.read()
 
 # process raw input into a list of dicts (each dict is one passport)
