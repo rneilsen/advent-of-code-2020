@@ -1,6 +1,5 @@
 from os.path import abspath, join, dirname
 from collections import Counter
-import re
 
 goal = 'shiny gold'
 
@@ -28,11 +27,14 @@ processed = set()           # bag types we've already found containers of
 while len(to_process) > 0:
     current = to_process.pop()
     if current in processed:
-        continue
+        continue            # skip if we've already done this one
+
     # find everything that can contain 'current', and add them to to_process
     for container in rules:
         if current in rules[container]:
             to_process.add(container)
+    
+    # finally, mark 'current' as processed
     processed.add(current)
 
 print(len(processed) - 1)   # - 1 to not count the goal itself
