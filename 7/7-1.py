@@ -14,6 +14,9 @@ for raw in raw_rules:
     raw = raw.replace(' bags', '')
     raw = raw.replace(' bag', '')
     (container_type, contained_raw) = raw.split(sep = ' contain ')
+    if contained_raw == 'no other':
+        rules[container_type] = Counter()
+        continue
     contained_list = contained_raw.split(sep = ', ')
     contained_set = Counter()
     for contained in contained_list:
