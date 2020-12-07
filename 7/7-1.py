@@ -21,7 +21,7 @@ for raw in raw_rules:
     contained_set = Counter()
     for contained in contained_list:
         (num_contained, contained_type) = contained.split(sep=' ', maxsplit=1)
-        contained_set[contained_type] = num_contained
+        contained_set[contained_type] = int(num_contained)
     rules[container_type] = contained_set
 
 
