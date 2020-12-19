@@ -1,27 +1,40 @@
 from os.path import abspath, dirname, join
-from typing import Dict, List
+from typing import Dict, List, Set
 
 with open(abspath(join(dirname(__file__), 'input'))) as f:
     sections = [l.strip() for l in f.read().split(sep='\n\n')]
 
 target_prefix = 'departure'
 
-# parse identified fields into dict:
-# key = name of field
-# value = set of allowable values
-# also create master list of all allowed values for finding invalid tickets
-fields = {}
+
+class field:
+    def __init__(self, name: str, allowed_values: Set[int], num_possible_slots: int):
+        self.name = name                                        # 'class'
+        self.allowed_values = allowed_values                    # {25, 26, 27, 31, 32, 33, 34}
+        self.possible_slots = set(range(num_possible_slots))    # {1, 2, 3, 4, 5, 6, 7}
+        self.known_loc = None                                   # None / 3
+    
+    def is_allowed(self, value):
+        return value in self.allowed_values
+
+    def remove_slot(self, slot: int):
+        self.possible_slots.discard(slot)
+        if len(self.possible_slots) == 1:
+            self.known_loc = self.possible_slots.pop()
+
+
+# parse first section into a set of field objects
+fields = set()
 raw_fields = sections[0].split(sep='\n')
-allowed_values = set()
 for raw_field in raw_fields:
     (field_name, raw_ranges) = raw_field.split(sep=': ')
     ranges = raw_ranges.split(' or ')
-    fields[field_name] = set()
+    allowed_values = set()
     for r in ranges:
         (lb, ub) = r.split('-')
         this_range = range(int(lb), int(ub) + 1)
-        fields[field_name].update(set(this_range))
         allowed_values.update(set(this_range))
+    fields.add(field(field_name, allowed_values, len(raw_fields)))
 
 
 # parse your ticket into a list of ints
@@ -33,9 +46,17 @@ for line in sections[2].split(sep='\n')[1:]:
     nearby_tickets.append([int(n) for n in line.split(sep=',')])
 
 
-def is_valid(ticket):
+def is_valid_value(value: int) -> bool:
+    for f in fields:
+        if f.is_allowed(value):
+            return True
+    else:
+        return False
+
+
+def is_valid_ticket(ticket: List[int]) -> bool:
     for value in ticket:
-        if value not in allowed_values:
+        if not is_valid_value(value):
             return False
     else:
         return True
@@ -44,48 +65,13 @@ def is_valid(ticket):
 def part1():
     error_rate = 0
     for ticket in nearby_tickets:
-        error_rate += sum([value for value in ticket if value not in allowed_values])
+        error_rate += sum([value for value in ticket if not is_valid_value(value)])
     
     return error_rate
 
 
 def part2():
-    num_values = len(your_ticket)
-    potential_locations = [set(fields.keys()) for n in range(num_values)]
-    num_pls = {}    # number of potential locs for each field
-    for field in fields:
-        num_pls[field] = num_values
-    
-    valid_tickets = list(filter(is_valid, nearby_tickets))
-    for ticket in valid_tickets:
-        for i in range(num_values):
-            for field in fields:
-                if ticket[i] not in fields[field]:
-                    potential_locations[i].discard(field)
-                    num_pls[field] -= 1
-                    if len(potential_locations[i]) == 1:
-                        isolated_field = next(iter(potential_locations[i]))
-                        for p in potential_locations[:i] + potential_locations[i+1:]:
-                            p.discard(isolated_field)
-        for field in fields:
-            if num_pls[field] == 1:
-                potential_locations = {field}
-                for other_field in fields:
-                    if other_field == field:
-                        continue
-                    else:
-                        potential_locations[other_field].discard(field)
-    
-    locations = {}
-    for i in range(num_values):
-        locations[potential_locations[i].pop()] = i
-    
-    product = 1
-    for field in locations:
-        if field.find(target_prefix) == 0:
-            product *= your_ticket[locations[field]]
-    
-    return product
+    pass
 
 
 print(part1())
