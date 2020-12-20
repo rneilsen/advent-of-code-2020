@@ -1,92 +1,96 @@
 from os.path import abspath, dirname, join
 from itertools import product
+from functools import reduce
 from typing import List
 
-with open(abspath(join(dirname(__file__), 'input'))) as f:
+with open(abspath(join(dirname(__file__), 'test_input1'))) as f:
     raw_rows = [l.strip() for l in f.readlines()]
 
-# CONVENTION: x = row number, y = position in row, z = layer number
+# CONVENTION: coord[0] (x) = row number, coord[1] (y) = position in row
 
 class Cube:
-    def __init__(self, x: int, y: int, z: int):
-        (self.x, self.y, self.z) = (x, y, z)
+    def __init__(self, coords: List[int]):
+        self.coords = coords
     
     def get_neighbour_cubes(self):
         neighbour_cubes = set()
-        for (x, y, z) in product(*[range(n-1, n+2) for n in [self.x, self.y, self.z]]):
-            neighbour_cubes.add(Cube(x, y, z))
-        neighbour_cubes.remove(Cube(self.x, self.y, self.z))
+        for coords in product(*[range(x-1, x+2) for x in self.coords]):
+            neighbour_cubes.add(Cube(coords))
+        neighbour_cubes.remove(Cube(self.coords))
         return neighbour_cubes
 
     def __repr__(self):
-        return f"({self.x},{self.y},{self.z})"
+        return f"({','.join([str(n) for n in self.coords])})"
 
     def __eq__(self, other):
-        return self.x == other.x and self.y == other.y and self.z == other.z
+        for (a, b) in zip(self.coords, other.coords):
+            if a != b:
+                return False
+        else:
+            return True
 
     def __hash__(self):
-        return hash((self.x, self.y, self.z))
+        return hash(tuple(self.coords))
 
 
 class CubeSpace:
-    def __init__(self, raw_input: List[str]):
+    def __init__(self, dim: int, raw_input: List[str]):
         self.active_cubes = set()
-        self.xmin = self.xmax = 0
-        self.ymin = self.ymax = 0
-        self.zmin = self.zmax = 0
+        self.dim = dim
+
+        self.space_bounds = []
+        for d in range(dim):
+            self.space_bounds.append((0,0))
+        
         for (x, row) in enumerate(raw_input):
             for (y, char) in enumerate(row):
                 if char == '#':
-                    self.activate(x, y, 0)
+                    self.activate([x, y] + ([0] * (dim-2)))
     
-    def activate(self, x: int, y: int, z: int):
-        self.active_cubes.add(Cube(x, y, z))
-        self.xmin = min(x, self.xmin)
-        self.xmax = max(x, self.xmax)
-        self.ymin = min(y, self.ymin)
-        self.ymax = max(y, self.ymax)
-        self.zmin = min(z, self.zmin)
-        self.zmax = max(z, self.zmax)
-    
+    def activate(self, coords):
+        self.active_cubes.add(Cube(coords))
+        for n in range(self.dim):
+            (cur_lbound, cur_ubound) = self.space_bounds[n]
+            self.space_bounds[n] = (min(coords[n], cur_lbound), max(coords[n], cur_ubound))
+                
     def deactivate(self, cube: Cube):
         self.active_cubes.remove(cube)
 
     def display(self):
-        for z in range(self.zmin, self.zmax + 1):
-            print(f"z={z}")
-            for x in range(self.xmin, self.xmax + 1):
+        for slice_coords in product(*[range(lb,ub+1) for (lb, ub) in self.space_bounds[2:]]):
+            print(', '.join([f"x_{d+2}={slice_coords[d]}" for d in range(self.dim - 2)]))
+            for x in range(self.space_bounds[0][0], self.space_bounds[0][1] + 1):
                 row_string = ''
-                for y in range(self.ymin, self.ymax + 1):
-                    row_string += ('#' if Cube(x,y,z) in self.active_cubes else '.')
+                for y in range(self.space_bounds[1][0], self.space_bounds[1][1] + 1):
+                    row_string += ('#' if Cube([x,y] + list(slice_coords)) in self.active_cubes else '.')
                 print(row_string)
             print('')
     
     def __repr__(self):
         return str([cube for cube in self.active_cubes])
     
-    def is_active(self, x: int, y: int, z: int):
-        return Cube(x, y, z) in self.active_cubes
+    def is_active(self, coords):
+        return Cube(coords) in self.active_cubes
 
     def cycle(self):
         # returns a new CubeSpace corresponding to one cycle after this one
-        new_space = CubeSpace([])
-        for x in range(self.xmin - 1, self.xmax + 2):
-            for y in range(self.ymin - 1, self.ymax + 2):
-                for z in range(self.zmin - 1, self.zmax + 2):
-                    spaces_to_check = Cube(x,y,z).get_neighbour_cubes()
-                    active_neighbours = spaces_to_check.intersection(self.active_cubes)
-                    if len(active_neighbours) == 3:
-                        new_space.activate(x, y, z)
-                    elif len(active_neighbours) == 2 and self.is_active(x, y, z):
-                        new_space.activate(x, y, z)
+        new_space = CubeSpace(self.dim, [])
+        for coords in product(*[range(lb-1,ub+2) for (lb, ub) in self.space_bounds]):
+            spaces_to_check = Cube(coords).get_neighbour_cubes()
+            active_neighbours = spaces_to_check.intersection(self.active_cubes)
+            if len(active_neighbours) == 3:
+                new_space.activate(coords)
+            elif len(active_neighbours) == 2 and self.is_active(coords):
+                new_space.activate(coords)
         return new_space
         
                     
 def part1():
-    cubes = CubeSpace(raw_rows)
+    cubes = CubeSpace(3, raw_rows)
     for n in range(6):
+        print("After", n, "cycles:")
+        cubes.display()
         cubes = cubes.cycle()
     return len(cubes.active_cubes)
 
 print(part1())
-
