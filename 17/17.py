@@ -2,7 +2,7 @@ from os.path import abspath, dirname, join
 from itertools import product
 from typing import List
 
-with open(abspath(join(dirname(__file__), 'test_input1'))) as f:
+with open(abspath(join(dirname(__file__), 'input'))) as f:
     raw_rows = [l.strip() for l in f.readlines()]
 
 # CONVENTION: x = row number, y = position in row, z = layer number
@@ -82,5 +82,11 @@ class CubeSpace:
         return new_space
         
                     
+def part1():
+    cubes = CubeSpace(raw_rows)
+    for n in range(6):
+        cubes = cubes.cycle()
+    return len(cubes.active_cubes)
 
+print(part1())
 
