@@ -3,8 +3,10 @@ from itertools import product
 from functools import reduce
 from typing import List
 
-with open(abspath(join(dirname(__file__), 'test_input1'))) as f:
+with open(abspath(join(dirname(__file__), 'input'))) as f:
     raw_rows = [l.strip() for l in f.readlines()]
+
+target_num_cycles = 6
 
 # CONVENTION: coord[0] (x) = row number, coord[1] (y) = position in row
 
@@ -83,14 +85,31 @@ class CubeSpace:
             elif len(active_neighbours) == 2 and self.is_active(coords):
                 new_space.activate(coords)
         return new_space
-        
-                    
-def part1():
+
+      
+def part1(disp=False):
     cubes = CubeSpace(3, raw_rows)
-    for n in range(6):
+    if disp:
         print("After", n, "cycles:")
         cubes.display()
+    for n in range(target_num_cycles):
         cubes = cubes.cycle()
+        if disp:
+            print("After", n, "cycles:")
+            cubes.display()
     return len(cubes.active_cubes)
 
-print(part1())
+def part2(disp=False):
+    cubes = CubeSpace(4, raw_rows)
+    if disp:
+        print("After", n, "cycles:")
+        cubes.display()
+    for n in range(target_num_cycles):
+        cubes = cubes.cycle()
+        if disp:
+            print("After", n, "cycles:")
+            cubes.display()
+    return len(cubes.active_cubes)
+
+print("Part 1:", part1())
+print("Part 2:", part2())
